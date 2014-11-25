@@ -1,0 +1,23 @@
+What if this service needed to scale to 10,000 URL generation requests per second?
+
+The service has 2 part for URL generation. Generating id and storing
+ url and id pair. They corresponds to the redis operation INCR and MSET.
+
+For this prototype, I have used MockJedis as a big hash table. If you change it 
+ to real redis, you'll achieve the goal. 
+The official benchmark result (http://redis.io/topics/benchmarks) shows it can
+ handle 100018 INCR reqs completed in 1.46 seconds and 100007 reqs completed
+ in 0.88 seconds on a single machine (Intel(R) Xeon(R) CPU E5520 @ 2.27GHz).
+ 
+If you like more scalable, distributed system can be considered. For id 
+generation we can choose Twitter's snowflake model, the composition of:
+ timestamp, worker number and sequence number. And Storing is easy. Just scale
+ out by the demand of throughput. Sharding or coordination
+  (e.g. Hadoop NameNode) can be considered.
+
+How about 100,000 URL resolve requests per second?
+
+The official benchmark shows 100000 GET requests completed in 1.23 seconds.
+ So that's close. However, HTTP servers can be distributed in L4 because it's
+  stateless service. And stateful service can be sharded by id. There might be
+  hotspot. We can think about various caching and replication of those hotspot.   
